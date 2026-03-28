@@ -30,7 +30,9 @@ export async function saveScanToFirebase(label, category, confidence) {
             month:      new Date().toLocaleString('default', { month: 'short' }),
             year:       new Date().getFullYear(),
             timestamp:  new Date().toISOString(),
-            city:       "Bhopal"
+            city:       "Bhopal",
+            userId:    "guest",
+            userName:  "Guest"
         });
         console.log("✅ Scan saved to Firebase:", label);
     } catch (error) {

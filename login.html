@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recyclix AI | Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+    <style>
+        :root {
+            --primary-blue: #1E3A8A;
+            --primary-aqua: #06B6D4;
+            --primary-green: #22C55E;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255,255,255,0.8);
+            --glass-border: rgba(255,255,255,0.6);
+            --font-heading: 'Montserrat', sans-serif;
+            --font-body: 'Open Sans', sans-serif;
+        }
+        [data-theme="dark"] {
+            --bg-light: #0f172a;
+            --text-dark: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(30,41,59,0.8);
+            --glass-border: rgba(255,255,255,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 50%, #dbeafe, #f0fdf4, #e0f2fe);
+            color: var(--text-dark);
+        }
+        [data-theme="dark"] body {
+            background: radial-gradient(circle at 30% 50%, #0f172a, #020617);
+        }
+        .login-wrapper {
+            display: flex;
+            width: 90%;
+            max-width: 900px;
+            min-height: 560px;
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+        /* Left side — branding */
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, #1E3A8A, #06B6D4);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+        }
+        .login-left .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .login-left .logo i { color: #22C55E; font-size: 1.75rem; }
+        .login-left h1 {
+            font-family: var(--font-heading);
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+        .login-left p {
+            opacity: 0.85;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        .feature-list {
+            list-style: none;
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .feature-list li i {
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .login-left .bottom-text {
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+        /* Right side — form */
+        .login-right {
+            flex: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .login-right h2 {
+            font-family: var(--font-heading);
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        .login-right .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .tab-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: rgba(0,0,0,0.05);
+            padding: 0.3rem;
+            border-radius: 0.75rem;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--primary-green);
+            color: white;
+        }
+        .tab-btn:not(.active) {
+            background: transparent;
+            color: var(--text-muted);
+        }
+        .error-box {
+            display: none;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            border-left: 3px solid #ef4444;
+        }
+        .success-box {
+            display: none;
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            border-left: 3px solid #22c55e;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            font-family: var(--font-body);
+            background: rgba(255,255,255,0.8);
+            color: var(--text-dark);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-aqua);
+        }
+        [data-theme="dark"] .input-group input {
+            background: rgba(30,41,59,0.8);
+            border-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover { background: #16a34a; transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .divider div { flex: 1; height: 1px; background: rgba(0,0,0,0.1); }
+        .divider span { color: var(--text-muted); font-size: 0.875rem; }
+        .btn-google {
+            width: 100%;
+            padding: 0.9rem;
+            background: white;
+            color: #374151;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+        }
+        .btn-google:hover { background: #f9fafb; transform: translateY(-1px); }
+        .btn-google img { width: 18px; height: 18px; }
+        .dark-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-dark);
+            backdrop-filter: blur(10px);
+        }
+        @media (max-width: 640px) {
+            .login-left { display: none; }
+            .login-wrapper { max-width: 420px; border-radius: 1.5rem; }
+            .login-right { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dark mode toggle -->
+    <button class="dark-toggle" id="darkToggle">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <div class="login-wrapper">
+        <!-- Left Branding Panel -->
+        <div class="login-left">
+            <div>
+                <div class="logo">
+                    <i class="fa-solid fa-recycle"></i>
+                    <span>Recyclix<span style="color:#06B6D4;">AI</span></span>
+                </div>
+                <h1 style="margin-top:2rem;">Smart Waste.<br>Cleaner Bhopal.</h1>
+                <p>Join thousands of citizens making Bhopal cleaner with AI-powered waste segregation.</p>
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-brain"></i> AI classifies waste instantly</li>
+                    <li><i class="fa-solid fa-bolt"></i> Real disposal advice via GenAI</li>
+                    <li><i class="fa-solid fa-chart-line"></i> Track your eco score & history</li>
+                    <li><i class="fa-solid fa-trophy"></i> Earn eco badges and levels</li>
+                </ul>
+            </div>
+            <p class="bottom-text">© 2026 Recyclix AI. Clean, Smart, Sustainable.</p>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="login-right">
+            <h2 id="formTitle">Welcome back</h2>
+            <p class="subtitle" id="formSubtitle">Login to your account to continue</p>
+
+            <!-- Tab buttons -->
+            <div class="tab-group">
+                <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" id="signupTab" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <!-- Messages -->
+            <div class="error-box" id="errorBox"></div>
+            <div class="success-box" id="successBox"></div>
+
+            <!-- Email -->
+            <div class="input-group">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="emailInput" placeholder="Email address">
+            </div>
+
+            <!-- Password -->
+            <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="passwordInput" placeholder="Password (min 6 characters)"
+                    onkeydown="if(event.key==='Enter') handleEmailAuth()">
+            </div>
+
+            <!-- Submit -->
+            <button class="btn-submit" id="submitBtn" onclick="handleEmailAuth()">
+                Login
+            </button>
+
+            <!-- Divider -->
+            <div class="divider">
+                <div></div><span>or continue with</span><div></div>
+            </div>
+
+            <!-- Google -->
+            <button class="btn-google" onclick="handleGoogleAuth()">
+                <img src="https://www.google.com/favicon.ico" alt="Google">
+                Continue with Google
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup,
+                 createUserWithEmailAndPassword, signInWithEmailAndPassword,
+                 onAuthStateChanged }
+                                  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey:            "AIzaSyC7RQgZNjvL30ckXviMIzyH2w0mXHD7pW8",
+            authDomain:        "recyclix-ai.firebaseapp.com",
+            projectId:         "recyclix-ai",
+            storageBucket:     "recyclix-ai.firebasestorage.app",
+            messagingSenderId: "257417711055",
+            appId:             "1:257417711055:web:29685eb719a4e6336656ba"
+        };
+
+        const app      = initializeApp(firebaseConfig);
+        const auth     = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // If already logged in — redirect to main app
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        let currentTab = 'login';
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const isLogin = tab === 'login';
+            document.getElementById('loginTab').classList.toggle('active', isLogin);
+            document.getElementById('signupTab').classList.toggle('active', !isLogin);
+            document.getElementById('formTitle').textContent    = isLogin ? 'Welcome back'      : 'Create account';
+            document.getElementById('formSubtitle').textContent = isLogin ? 'Login to your account to continue' : 'Sign up to start tracking your eco impact';
+            document.getElementById('submitBtn').textContent    = isLogin ? 'Login'             : 'Create Account';
+            document.getElementById('errorBox').style.display   = 'none';
+            document.getElementById('successBox').style.display = 'none';
+        };
+
+        window.handleEmailAuth = async function() {
+            const email    = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const errorBox = document.getElementById('errorBox');
+            const successBox = document.getElementById('successBox');
+            const btn      = document.getElementById('submitBtn');
+
+            errorBox.style.display   = 'none';
+            successBox.style.display = 'none';
+
+            if (!email || !password) {
+                errorBox.style.display  = 'block';
+                errorBox.textContent    = 'Please enter your email and password.';
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Please wait...';
+            btn.disabled  = true;
+
+            try {
+                if (currentTab === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    successBox.style.display = 'block';
+                    successBox.textContent   = '✅ Account created! Redirecting...';
+                }
+                window.location.href = 'index.html';
+            } catch (error) {
+                errorBox.style.display = 'block';
+                errorBox.textContent   = getFriendlyError(error.code);
+                btn.innerHTML = currentTab === 'login' ? 'Login' : 'Create Account';
+                btn.disabled  = false;
+            }
+        };
+
+        window.handleGoogleAuth = async function() {
+            const errorBox = document.getElementById('errorBox');
+            try {
+                await signInWithPopup(auth, provider);
+                window.location.href = 'index.html';
+            } catch (error) {
+                errorBox.style.display = 'block';
+                errorBox.textContent   = error.message;
+            }
+        };
+
+        function getFriendlyError(code) {
+            const errors = {
+                "auth/email-already-in-use": "This email is already registered. Try logging in.",
+                "auth/weak-password":        "Password must be at least 6 characters.",
+                "auth/invalid-email":        "Please enter a valid email address.",
+                "auth/user-not-found":       "No account found with this email.",
+                "auth/wrong-password":       "Incorrect password. Please try again.",
+                "auth/invalid-credential":   "Invalid email or password.",
+                "auth/too-many-requests":    "Too many attempts. Please wait a moment."
+            };
+            return errors[code] || "Something went wrong. Please try again.";
+        }
+
+        // Dark mode toggle
+        document.getElementById('darkToggle').addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                document.getElementById('darkToggle').innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('darkToggle').innerHTML = '<i class="fa-solid fa-sun"></i>';
+            }
+        });
+    </script>
+</body>
+</html>

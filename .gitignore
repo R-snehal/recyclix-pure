@@ -1,0 +1,28 @@
+# =====================================================
+#  Recyclix AI — Git Ignore
+#  These files will NOT be uploaded to GitHub
+# =====================================================
+
+# !! MOST IMPORTANT — never upload your secret API key !!
+.env
+
+# Node.js installed packages (too large, gets reinstalled with npm install)
+node_modules/
+
+# Mac system files (useless junk)
+.DS_Store
+
+# Windows system files
+Thumbs.db
+desktop.ini
+
+# VS Code editor settings (optional, remove if you want to share settings)
+.vscode/
+
+# Log files
+*.log
+npm-debug.log*
+
+# Build output (if you add a build step later)
+dist/
+build/

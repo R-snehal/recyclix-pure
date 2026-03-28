@@ -16,9 +16,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- TensorFlow.js and COCO-SSD (Object Detection) -->
+    <!-- TensorFlow.js and MobileNet -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
@@ -77,11 +77,9 @@
         
         <div class="hero-visual">
             <div class="glow-orb"></div>
-            <!-- Simulated 3D Globe with CSS -->
             <div class="css-globe">
                 <div class="globe-sphere"></div>
                 <div class="globe-ring"></div>
-                <!-- Eco-tech illustration badge overlay -->
                 <div class="badge-overlay">
                     <i class="fa-solid fa-microchip"></i>
                     <i class="fa-solid fa-recycle overlay-recycle"></i>
@@ -152,7 +150,6 @@
                     
                     <div id="previewContainer" class="hidden" style="width: 100%; height: 100%; position: absolute; top:0; left:0; border-radius: inherit; overflow: hidden;">
                         <img id="imagePreview" src="" style="width: 100%; height: 100%; object-fit: cover;">
-                        <canvas id="detectionCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;"></canvas>
                         <div class="scanner-grid hidden" id="scannerGrid"></div>
                         <div id="scanLine" class="scan-line hidden"></div>
                         <div id="previewOverlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none;"></div>
@@ -165,38 +162,41 @@
                     
                     <div id="uploadResult" class="hidden scale-in" style="position: relative; z-index: 10; background: rgba(255,255,255,0.95); padding: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
                         <div class="success-icon" style="width: 60px; height: 60px; font-size: 2rem; margin: 0 auto 1rem;"><i class="fa-solid fa-circle-check"></i></div>
-                        <h3 id="resultTitle">PET Plastic Bottle</h3>
+                        <h3 id="resultTitle">Detecting...</h3>
                         <div class="tags" id="resultTags">
-                            <span class="tag tag-blue"><i class="fa-solid fa-recycle"></i> Recyclable</span>
-                            <span class="tag tag-green"><i class="fa-solid fa-leaf"></i> 95% Confidence</span>
+                            <span class="tag tag-blue"><i class="fa-solid fa-recycle"></i> Analysing...</span>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Right: AI Result -->
+
+            <!-- Right: AI Chat Result -->
             <div class="demo-right glass-panel">
                 <div class="chat-container" id="chatContainer">
-                    <!-- Initial Chat -->
+
+                    <!-- Initial greeting from AI -->
                     <div class="chat-message fade-in">
                         <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
                         <div class="chat-bubble">Ready to analyze. Upload an image to begin.</div>
                     </div>
                     
-                    <!-- Result Chat (Hidden initially) -->
+                    <!-- Result chat (hidden until image is scanned) -->
                     <div id="resultChat" class="hidden">
                         <div class="chat-message user-msg fade-in">
                             <div class="chat-bubble user-bubble"><i class="fa-solid fa-image"></i> Image uploaded.</div>
                         </div>
                         <div class="chat-message ai-msg fade-in" style="animation-delay: 0.5s;">
                             <div class="chat-avatar gradient-avatar"><i class="fa-solid fa-microchip"></i></div>
+                            <!-- ↓ This bubble is now filled dynamically by script.js via Claude API -->
                             <div class="chat-bubble ai-bubble highlight-border">
-                                <strong>Classification Complete.</strong><br>
-                                Identified as a clear PET plastic bottle.<br><br>
-                                <span class="green-text"><i class="fa-solid fa-bolt"></i> Please empty liquids and place in the BLUE bin. Cap removal depends on local guidelines.</span>
+                                <strong>Classification Complete.</strong><br><br>
+                                <span class="green-text">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Getting AI disposal advice...
+                                </span>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -206,16 +206,8 @@
     <section class="dashboard" id="dashboard">
         <div class="dashboard-header">
             <div>
-                <h2>National Smart Cities Dashboard</h2>
-                <p>Real-time analytics and segregation efficiency tracking across major Indian cities.</p>
-                <div style="margin-top: 1rem;">
-                    <select id="citySelect" class="city-dropdown">
-                        <option value="bhopal">Bhopal (MP) - Pilot Hub</option>
-                        <option value="indore">Indore (MP) - Cleanest City</option>
-                        <option value="surat">Surat (GJ) - Smart Grid</option>
-                        <option value="pune">Pune (MH) - Urban Network</option>
-                    </select>
-                </div>
+                <h2>Bhopal Smart Dashboard</h2>
+                <p>Real-time analytics for Bhopal Municipal Corporation (BMC) waste processing.</p>
             </div>
             <div class="dashboard-tabs" id="dashboardTabs">
                 <button class="tab active" data-view="city">City View</button>
@@ -364,7 +356,7 @@
             <a href="#how-it-works">Use Cases</a>
             <a href="#datasets">Datasets</a>
             <a href="#dashboard">API Docs</a>
-            <a href="mailto:hello@recyclix.ai">Contact</a>
+            <a href="/cdn-cgi/l/email-protection#98f0fdf4f4f7d8eafdfbe1fbf4f1e0f9f1b6fbf7f5">Contact</a>
         </div>
         
         <div class="social-links">
@@ -376,7 +368,7 @@
         <p class="copyright">© 2026 Recyclix AI. Clean, Smart, Sustainable.</p>
     </footer>
 
-    <!-- Init script -->
-    <script src="script.js"></script>
+    <!-- Main Script -->
+        <script type="module" src="script.js"></script>
 </body>
 </html>

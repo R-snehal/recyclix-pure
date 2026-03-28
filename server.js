@@ -1,99 +1,71 @@
-// =====================================================
-//  Recyclix AI — Backend Server
-//  Using Google Gemini API (Free, no card needed)
-// =====================================================
- 
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
- 
-const app = express();
+const cors    = require('cors');
+
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Database Setup ──────────────────────────────────
-const db = new sqlite3.Database(path.join(__dirname, 'scans.db'), (err) => {
-    if (err) console.error('Database opening error: ', err);
-    else console.log('✅ Connected to SQLite scans.db');
-});
-
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS scans (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        city TEXT,
-        label TEXT,
-        category TEXT,
-        confidence REAL,
-        advice TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-});
- 
-// ── Middleware ──────────────────────────────────────
 app.use(cors());
-app.use(express.json({ limit: '15mb' }));
+app.use(express.json());
 app.use(express.static('.'));
- 
-// ── Health Check Route ───────────────────────────────
+
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Recyclix AI server is running!' });
-});
- 
-// ── Dashboard Stats Route ────────────────────────────
-app.get('/api/stats', (req, res) => {
-    db.all(`SELECT city, category, strftime('%Y-%m', timestamp) as month, COUNT(*) as count FROM scans GROUP BY city, category, month`, [], (err, rows) => {
-        if (err) {
-            console.error('Database query error:', err.message);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        res.json({ success: true, stats: rows });
-    });
+    res.json({ status: 'ok', message: 'Recyclix AI server running!' });
 });
 
-// ── Main Classification Route (Offline Fast-Pass) ────────────────────────
 app.post('/api/classify', async (req, res) => {
-    // The frontend will do the vision detection (COCO-SSD) and send us the text label
-    const { label, category, confidence, city } = req.body;
- 
-    if (!label) {
-        return res.status(400).json({ error: 'No item label provided.' });
-    }
-    
-    // Fallback Offline Advice Generator
-    let advice = "";
-    if (category === 'Plastic' || category === 'Paper' || category === 'Metal') {
-        advice = `This belongs in the Blue Dry Waste Bin. Tip: Make sure it's clean and dry before recycling!`;
-    } else if (category === 'Glass') {
-        advice = `This belongs in the Green Bin. Tip: Handle with care so it doesn't shatter in the bin!`;
-    } else if (category === 'Organic') {
-        advice = `This belongs in the Green Wet Waste Bin. Tip: This can be composted to create rich fertilizer!`;
-    } else if (category === 'E-Waste') {
-        advice = `This is Hazardous E-Waste. Do not throw in regular bins! Please drop it off at a certified E-Waste collection center.`;
-    } else {
-        advice = `This is General Waste. Please dispose of it responsibly in the standard municipal bins.`;
+    const { wasteLabel, category, confidence } = req.body;
+
+    if (!wasteLabel) {
+        return res.status(400).json({ error: 'No waste label provided.' });
     }
 
     try {
-        console.log(`[${new Date().toISOString()}] Fast-Pass Classified: ${label} → ${category} (${confidence}%)`);
-        
-        // Save to Database
-        db.run(`INSERT INTO scans (city, label, category, confidence, advice) VALUES (?, ?, ?, ?, ?)`, 
-            [city || 'bhopal', label, category, confidence, advice], 
-            function(err) {
-                if (err) console.error('Error inserting into DB:', err.message);
-            }
-        );
- 
-        res.json({ success: true, advice });
- 
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [{
+                    role: "user",
+                    content: `You are an eco-friendly waste disposal expert helping citizens of Bhopal, India.
+A waste item has been identified as: "${wasteLabel}"
+Category detected: "${category || 'Unknown'}"
+AI Confidence: ${confidence || 'N/A'}%
+Give a response in exactly this format (keep it short and friendly):
+1. Which bin it goes in (mention the colour: Blue/Green/Red/Yellow bin)
+2. One specific recycling or disposal tip
+3. One fun eco fact about this type of waste
+Keep the total response under 4 sentences. Be warm and encouraging.`
+                }],
+                max_tokens: 200,
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            console.error('Groq API error:', data.error.message);
+            throw new Error(data.error.message);
+        }
+
+        const advice = data.choices[0].message.content;
+        console.log(`✅ [${new Date().toISOString()}] Classified: ${wasteLabel} → ${category}`);
+        res.json({ advice, success: true });
+
     } catch (error) {
-        console.error('Offline API Error:', error);
-        res.status(500).json({ success: false, error: 'Internal service error' });
+        console.error('Groq API Error:', error.message);
+        res.status(500).json({
+            advice: `This item appears to be ${wasteLabel} (${category}). Please check your local BMC guidelines for proper disposal.`,
+            success: false
+        });
     }
 });
- 
-// ── Start Server ─────────────────────────────────────
+
 app.listen(PORT, () => {
     console.log(`\n✅ Recyclix AI server is running!`);
     console.log(`👉 Open your app at: http://localhost:${PORT}`);

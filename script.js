@@ -181,11 +181,12 @@ if (uploadFileBtn) {
     uploadFileBtn.disabled = true;
     uploadFileBtn.style.opacity = "0.5";
     uploadFileBtn.style.cursor = "not-allowed";
-    uploadFileBtn.innerText = "AI Loading...";
+    uploadFileBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI Loading...';
 }
 if (uploadCamBtn) {
     uploadCamBtn.disabled = true;
     uploadCamBtn.style.opacity = "0.5";
+    uploadCamBtn.style.cursor = "not-allowed";
 }
 
 if (typeof mobilenet !== 'undefined') {
@@ -193,7 +194,7 @@ if (typeof mobilenet !== 'undefined') {
     aiModel = model;
     console.log("✅ MobileNet AI Model Loaded Successfully!");
 
-    // Re-enable buttons now that AI is ready
+    // Enable buttons now that AI is ready
     if (uploadFileBtn) {
         uploadFileBtn.disabled = false;
         uploadFileBtn.style.opacity = "1";
@@ -203,16 +204,21 @@ if (typeof mobilenet !== 'undefined') {
     if (uploadCamBtn) {
         uploadCamBtn.disabled = false;
         uploadCamBtn.style.opacity = "1";
+        uploadCamBtn.style.cursor = "pointer";
     }
     if (modelStatusEl) {
-        modelStatusEl.innerHTML = 'Upload Waste Image <span style="color:#22C55E;font-size:0.8rem;font-weight:500;">● AI Ready</span>';
+        modelStatusEl.innerHTML = 'Upload Waste Image <span style="color:#22C55E; font-size:0.8rem; font-weight:600;">● AI Ready</span>';
     }
 }).catch(err => {
     console.error("Model load error:", err);
     if (uploadFileBtn) {
-        uploadFileBtn.innerText = "Reload Page";
         uploadFileBtn.disabled = false;
         uploadFileBtn.style.opacity = "1";
+        uploadFileBtn.style.cursor = "pointer";
+        uploadFileBtn.innerHTML = 'Reload Page';
+    }
+    if (modelStatusEl) {
+        modelStatusEl.innerHTML = 'Upload Waste Image <span style="color:#ef4444; font-size:0.8rem;">● Failed — Reload</span>';
     }
 });
 }

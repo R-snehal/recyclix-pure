@@ -1,10 +1,12 @@
 // =====================================================
 //  Recyclix AI — Main Script
-//  Phase 2: Firebase Firestore integration
-//  localStorage kept as offline fallback
+//  Phase 3: Auth + personal scan history + eco score
 // =====================================================
 
 import { saveScanToFirebase, getScansFromFirebase } from './firebase.js';
+import { initAuth, signInWithGoogle, signInWithEmail, signUpWithEmail,
+         logOut, saveScanWithUser, getUserScans,
+         calculateEcoScore, getEcoLevel } from './auth.js';
 
 // ── Config ──────────────────────────────────────────
 const SERVER_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -112,7 +114,7 @@ async function getScanStats() {
 }
 
 
-// ── Gemini AI Advice ─────────────────────────────────
+// ── Groq AI Advice ─────────────────────────────────
 async function getAIAdvice(wasteLabel, category, confidence) {
     const chatBubble = document.querySelector('#resultChat .ai-bubble');
     if (!chatBubble) return;
@@ -549,3 +551,316 @@ window.addEventListener("resize", () => {
     canvas.height = window.innerHeight;
     initParticles();
 });
+
+// =====================================================
+//  PHASE 3 — Authentication & User Profile
+// =====================================================
+ 
+// ── Update Navbar Based on Auth State ────────────────
+function updateNavbar(user) {
+    const navActions = document.querySelector('.nav-actions');
+    if (!navActions) return;
+ 
+    if (user) {
+        // User is logged in — show avatar + logout
+        const photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=06B6D4&color=fff`;
+        navActions.innerHTML = `
+            <button class="btn-dark-mode" id="darkModeToggle"><i class="fa-solid fa-moon"></i></button>
+            <button class="btn-profile" id="profileBtn" onclick="showProfile()" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:0.5rem;font-weight:600;color:var(--primary-aqua);">
+                <img src="${photoURL}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-aqua);">
+                ${user.displayName ? user.displayName.split(' ')[0] : 'Profile'}
+            </button>
+            <button onclick="handleLogout()" class="btn btn-secondary" style="padding:0.5rem 1rem;">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+            <button class="btn-hamburger" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>`;
+    } else {
+        // Not logged in — show login button
+        navActions.innerHTML = `
+            <button class="btn-dark-mode" id="darkModeToggle"><i class="fa-solid fa-moon"></i></button>
+            <button onclick="showAuthModal()" class="btn btn-primary">
+                <i class="fa-solid fa-user"></i> Login
+            </button>
+            <a href="#demo" class="btn btn-primary">Try Now</a>
+            <button class="btn-hamburger" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>`;
+    }
+ 
+    // Re-attach dark mode toggle listener
+    const newToggle = document.getElementById('darkModeToggle');
+    if (newToggle) {
+        newToggle.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                newToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                newToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            }
+        });
+    }
+}
+ 
+// ── Show Auth Modal ───────────────────────────────────
+window.showAuthModal = function() {
+    // Remove existing modal if any
+    document.getElementById('authModal')?.remove();
+ 
+    const modal = document.createElement('div');
+    modal.id = 'authModal';
+    modal.style.cssText = `
+        position:fixed;inset:0;background:rgba(0,0,0,0.6);
+        z-index:9999;display:flex;align-items:center;justify-content:center;
+        backdrop-filter:blur(4px);`;
+ 
+    modal.innerHTML = `
+        <div style="background:var(--glass-bg);backdrop-filter:blur(16px);
+            border:1px solid var(--glass-border);border-radius:1.5rem;
+            padding:2.5rem;width:90%;max-width:420px;position:relative;">
+ 
+            <button onclick="document.getElementById('authModal').remove()"
+                style="position:absolute;top:1rem;right:1rem;background:none;
+                border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+ 
+            <div style="text-align:center;margin-bottom:1.5rem;">
+                <i class="fa-solid fa-recycle" style="font-size:2.5rem;color:var(--primary-green);"></i>
+                <h2 style="font-family:var(--font-heading);margin-top:0.5rem;">Welcome to RecyclixAI</h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;">Login to track your eco impact</p>
+            </div>
+ 
+            <!-- Tab buttons -->
+            <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;background:rgba(0,0,0,0.05);padding:0.3rem;border-radius:0.75rem;">
+                <button id="loginTab" onclick="switchTab('login')"
+                    style="flex:1;padding:0.6rem;border:none;border-radius:0.5rem;
+                    font-weight:600;cursor:pointer;background:var(--primary-green);color:white;">
+                    Login
+                </button>
+                <button id="signupTab" onclick="switchTab('signup')"
+                    style="flex:1;padding:0.6rem;border:none;border-radius:0.5rem;
+                    font-weight:600;cursor:pointer;background:transparent;color:var(--text-muted);">
+                    Sign Up
+                </button>
+            </div>
+ 
+            <!-- Error message -->
+            <div id="authError" style="display:none;background:#fee2e2;color:#991b1b;
+                padding:0.75rem;border-radius:0.75rem;margin-bottom:1rem;font-size:0.875rem;"></div>
+ 
+            <!-- Email input -->
+            <input id="authEmail" type="email" placeholder="Email address"
+                style="width:100%;padding:0.75rem 1rem;border:1px solid var(--glass-border);
+                border-radius:0.75rem;margin-bottom:0.75rem;font-size:1rem;
+                background:var(--glass-bg);color:var(--text-dark);box-sizing:border-box;">
+ 
+            <!-- Password input -->
+            <input id="authPassword" type="password" placeholder="Password (min 6 characters)"
+                style="width:100%;padding:0.75rem 1rem;border:1px solid var(--glass-border);
+                border-radius:0.75rem;margin-bottom:1rem;font-size:1rem;
+                background:var(--glass-bg);color:var(--text-dark);box-sizing:border-box;">
+ 
+            <!-- Submit button -->
+            <button id="authSubmitBtn" onclick="handleEmailAuth()"
+                style="width:100%;padding:0.85rem;background:var(--primary-green);
+                color:white;border:none;border-radius:0.75rem;font-size:1rem;
+                font-weight:600;cursor:pointer;margin-bottom:1rem;">
+                Login
+            </button>
+ 
+            <!-- Divider -->
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                <div style="flex:1;height:1px;background:var(--glass-border);"></div>
+                <span style="color:var(--text-muted);font-size:0.875rem;">or</span>
+                <div style="flex:1;height:1px;background:var(--glass-border);"></div>
+            </div>
+ 
+            <!-- Google button -->
+            <button onclick="handleGoogleAuth()"
+                style="width:100%;padding:0.85rem;background:white;color:#374151;
+                border:1px solid #e5e7eb;border-radius:0.75rem;font-size:1rem;
+                font-weight:600;cursor:pointer;display:flex;align-items:center;
+                justify-content:center;gap:0.75rem;">
+                <img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;">
+                Continue with Google
+            </button>
+        </div>`;
+ 
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+};
+ 
+// ── Switch Login / Signup Tab ─────────────────────────
+window.switchTab = function(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('loginTab').style.background  = isLogin ? 'var(--primary-green)' : 'transparent';
+    document.getElementById('loginTab').style.color       = isLogin ? 'white' : 'var(--text-muted)';
+    document.getElementById('signupTab').style.background = !isLogin ? 'var(--primary-green)' : 'transparent';
+    document.getElementById('signupTab').style.color      = !isLogin ? 'white' : 'var(--text-muted)';
+    document.getElementById('authSubmitBtn').innerText    = isLogin ? 'Login' : 'Create Account';
+    document.getElementById('authError').style.display   = 'none';
+    window._authTab = tab;
+};
+window._authTab = 'login';
+ 
+// ── Handle Email Auth ────────────────────────────────
+window.handleEmailAuth = async function() {
+    const email    = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const errorEl  = document.getElementById('authError');
+    const btn      = document.getElementById('authSubmitBtn');
+ 
+    if (!email || !password) {
+        errorEl.style.display = 'block';
+        errorEl.textContent   = 'Please enter your email and password.';
+        return;
+    }
+ 
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Please wait...';
+    btn.disabled  = true;
+ 
+    const result = window._authTab === 'login'
+        ? await signInWithEmail(email, password)
+        : await signUpWithEmail(email, password);
+ 
+    if (result.success) {
+        document.getElementById('authModal')?.remove();
+    } else {
+        errorEl.style.display = 'block';
+        errorEl.textContent   = result.error;
+        btn.innerHTML = window._authTab === 'login' ? 'Login' : 'Create Account';
+        btn.disabled  = false;
+    }
+};
+ 
+// ── Handle Google Auth ───────────────────────────────
+window.handleGoogleAuth = async function() {
+    const result = await signInWithGoogle();
+    if (result.success) {
+        document.getElementById('authModal')?.remove();
+    } else {
+        const errorEl = document.getElementById('authError');
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.textContent   = result.error;
+        }
+    }
+};
+ 
+// ── Handle Logout ─────────────────────────────────────
+window.handleLogout = async function() {
+    await logOut();
+};
+ 
+// ── Show Profile Page ─────────────────────────────────
+window.showProfile = async function() {
+    const { currentUser: user } = await import('./auth.js');
+    if (!user) { showAuthModal(); return; }
+ 
+    const scans    = await getUserScans();
+    const score    = calculateEcoScore(scans);
+    const ecoLevel = getEcoLevel(score);
+    const photoURL = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=06B6D4&color=fff&size=128`;
+ 
+    // Count categories
+    const catCount = {};
+    scans.forEach(s => { catCount[s.category] = (catCount[s.category] || 0) + 1; });
+    const topCategory = Object.entries(catCount).sort((a,b) => b[1]-a[1])[0];
+ 
+    // Build scan history rows
+    const historyRows = scans.slice(0, 10).map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;
+            padding:0.75rem;border-bottom:1px solid var(--glass-border);font-size:0.875rem;">
+            <span><i class="fa-solid fa-leaf" style="color:var(--primary-green);margin-right:0.5rem;"></i>${s.label}</span>
+            <span style="color:var(--text-muted);">${s.category}</span>
+            <span style="color:var(--text-muted);">${s.month} ${s.year}</span>
+        </div>`).join('');
+ 
+    document.getElementById('profileModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'profileModal';
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;
+        display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+        overflow-y:auto;padding:1rem;`;
+ 
+    modal.innerHTML = `
+        <div style="background:var(--glass-bg);backdrop-filter:blur(16px);
+            border:1px solid var(--glass-border);border-radius:1.5rem;
+            padding:2.5rem;width:90%;max-width:560px;position:relative;">
+ 
+            <button onclick="document.getElementById('profileModal').remove()"
+                style="position:absolute;top:1rem;right:1rem;background:none;
+                border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+ 
+            <!-- Profile header -->
+            <div style="text-align:center;margin-bottom:2rem;">
+                <img src="${photoURL}" style="width:80px;height:80px;border-radius:50%;
+                    border:3px solid var(--primary-aqua);margin-bottom:1rem;">
+                <h2 style="font-family:var(--font-heading);margin:0;">
+                    ${user.displayName || 'User'}
+                </h2>
+                <p style="color:var(--text-muted);margin:0.25rem 0;">${user.email}</p>
+                <span style="background:rgba(6,182,212,0.1);color:var(--primary-aqua);
+                    padding:0.3rem 1rem;border-radius:2rem;font-size:0.875rem;font-weight:600;">
+                    ${ecoLevel.icon} ${ecoLevel.level}
+                </span>
+            </div>
+ 
+            <!-- Stats cards -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+                <div style="background:rgba(34,197,94,0.1);border-radius:1rem;padding:1rem;text-align:center;">
+                    <div style="font-size:1.75rem;font-weight:700;color:var(--primary-green);">${score}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Eco Score</div>
+                </div>
+                <div style="background:rgba(6,182,212,0.1);border-radius:1rem;padding:1rem;text-align:center;">
+                    <div style="font-size:1.75rem;font-weight:700;color:var(--primary-aqua);">${scans.length}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Total Scans</div>
+                </div>
+                <div style="background:rgba(30,58,138,0.1);border-radius:1rem;padding:1rem;text-align:center;">
+                    <div style="font-size:1.75rem;font-weight:700;color:var(--primary-blue);">
+                        ${Object.keys(catCount).length}
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Categories</div>
+                </div>
+            </div>
+ 
+            ${topCategory ? `
+            <div style="background:rgba(34,197,94,0.08);border-radius:1rem;padding:1rem;
+                margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;">
+                <i class="fa-solid fa-trophy" style="color:#eab308;font-size:1.5rem;"></i>
+                <div>
+                    <div style="font-weight:600;">Top category: ${topCategory[0]}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        You've scanned ${topCategory[1]} ${topCategory[0]} items
+                    </div>
+                </div>
+            </div>` : ''}
+ 
+            <!-- Scan history -->
+            <h3 style="font-family:var(--font-heading);margin-bottom:1rem;">
+                <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary-aqua);"></i>
+                Recent Scans
+            </h3>
+            <div style="border:1px solid var(--glass-border);border-radius:1rem;overflow:hidden;">
+                ${historyRows || '<div style="padding:1rem;text-align:center;color:var(--text-muted);">No scans yet — start scanning!</div>'}
+            </div>
+        </div>`;
+ 
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+};
+ 
+// ── Initialize Auth on Page Load ─────────────────────
+initAuth(
+    (user) => {
+        // User logged in
+        console.log(" Logged in:", user.displayName || user.email);
+        updateNavbar(user);
+    },
+    () => {
+        // User logged out
+        console.log(" Logged out");
+        updateNavbar(null);
+    }
+);

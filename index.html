@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+     <!-- Auth Guard: redirect to login if not logged in -->
+    <script type="module">
+        import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7RQgZNjvL30ckXviMIzyH2w0mXHD7pW8",
+            authDomain: "recyclix-ai.firebaseapp.com",
+            projectId: "recyclix-ai",
+            storageBucket: "recyclix-ai.firebasestorage.app",
+            messagingSenderId: "257417711055",
+            appId: "1:257417711055:web:29685eb719a4e6336656ba"
+        };
+        const app  = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = 'login.html';
+        });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recyclix AI | Clean, Smart, Sustainable</title>

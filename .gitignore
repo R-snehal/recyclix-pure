@@ -5,7 +5,7 @@
 
 # !! MOST IMPORTANT — never upload your secret API key !!
 .env
-
+.env.example
 # Node.js installed packages (too large, gets reinstalled with npm install)
 node_modules/
 

@@ -1,6 +1,6 @@
 # ♻️ Recyclix AI — GenAI Waste Segregation System
 
-> Turning Trash into Data-Driven Insights using Computer Vision + Claude AI
+> Turning Trash into Data-Driven Insights 
 
 A smart web application that automatically classifies waste from images using TensorFlow.js MobileNet, then uses the Groq AI to provide intelligent disposal advice and recycling recommendations.
 

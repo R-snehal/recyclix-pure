@@ -2,7 +2,7 @@
 
 > Turning Trash into Data-Driven Insights using Computer Vision + Claude AI
 
-A smart web application that automatically classifies waste from images using TensorFlow.js MobileNet, then uses the Gemini AI to provide intelligent disposal advice and recycling recommendations — built for Bhopal Smart City.
+A smart web application that automatically classifies waste from images using TensorFlow.js MobileNet, then uses the Groq AI to provide intelligent disposal advice and recycling recommendations.
 
 ---
 
@@ -80,13 +80,13 @@ TensorFlow MobileNet classifies it in the browser
        ↓
 script.js sends label to server.js (POST /api/classify)
        ↓
-server.js calls GEMINI API with the label
+server.js calls Groq API with the label
        ↓
-Gemini returns disposal advice
+Groq returns disposal advice
        ↓
 advice shown in chat bubble on the right
        ↓
-scan saved to localStorage → updates dashboard charts
+scan saved to Firebase and backup on localStorage → updates dashboard charts
 ```
 
 ---
@@ -97,7 +97,7 @@ scan saved to localStorage → updates dashboard charts
 |---|---|
 | Frontend | HTML5, CSS3, Vanilla JavaScript |
 | AI Classification | TensorFlow.js + MobileNet |
-| GenAI Reasoning | Gemini |
+| GenAI Reasoning | Groq |
 | Charts | Chart.js |
 | Backend | Node.js + Express |
 | Icons | Font Awesome 6 |
@@ -115,7 +115,7 @@ scan saved to localStorage → updates dashboard charts
 
 ## 🔐 Security Notes
 
-- Your `GEMINI_API_KEY` is stored in `.env` and **never** sent to the frontend
+- Your `Groq_API_KEY` is stored in `.env` and **never** sent to the frontend
 - The `.gitignore` file ensures `.env` is never uploaded to GitHub
 - All Claude API calls happen server-side in `server.js`
 
